@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mavi Varlık Gizli Portal</title>
+    <style>
+        :root {
+            --bg-main: #050b14;
+            --bg-card: #0f172a;
+            --accent: #0ea5e9;
+            --text: #f8fafc;
+        }
+        body {
+            background-color: var(--bg-main); color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        /* GİRİŞ EKRANI */
+        #loginScreen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 80vh; text-align: center;
+        }
+        .login-box {
+            background: var(--bg-card); padding: 40px; border-radius: 12px;
+            border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+            width: 100%; max-width: 350px;
+        }
+        .login-box h1 { color: var(--accent); margin-top: 0; }
+        .login-box input {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: #020617; color: white; border: 1px solid #334155;
+            border-radius: 6px; box-sizing: border-box;
+        }
+        .btn {
+            background: var(--accent); color: var(--bg-main);
+            border: none; padding: 12px 20px; border-radius: 6px;
+            font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s;
+        }
+        .btn:hover { background: #38bdf8; box-shadow: 0 0 10px var(--accent); }
+
+        /* ANA SİTE (Başlangıçta Gizli) */
+        #mainSite { display: none; }
+        
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-card); padding: 15px 30px; border-radius: 12px;
+            margin-bottom: 25px; border-bottom: 2px solid var(--accent);
+        }
+        .header h2 { margin: 0; color: var(--accent); }
+
+        .card {
+            background: var(--bg-card); padding: 25px; border-radius: 12px;
+            margin-bottom: 25px; border: 1px solid #1e293b;
+        }
+        video { width: 100%; border-radius: 8px; background: #000; }
+        
+        form input, form textarea {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: #020617; color: white; border: 1px solid #334155;
+            border-radius: 6px; box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GİRİŞ EKRANI -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1>SİSTEME GİRİŞ</h1>
+            <p style="color: #94a3b8; font-size: 14px;">Sadece onaylı üyeler girebilir.</p>
+            <input type="text" id="username" placeholder="Kullanıcı Adı">
+            <input type="password" id="password" placeholder="Şifre">
+            <button class="btn" onclick="girisYap()">Bağlan</button>
+            <p id="hataMesaji" style="color: #ef4444; display: none; font-size: 14px; margin-top: 10px;">Hatalı kullanıcı adı veya şifre!</p>
+        </div>
+    </div>
+
+    <!-- ANA SİTE -->
+    <div id="mainSite" class="container">
+        <div class="header">
+            <h2>Mavi Varlık Portal</h2>
+            <button class="btn" style="width: auto; background: #ef4444; color: white;" onclick="cikisYap()">Çıkış Yap</button>
+        </div>
+
+        <!-- Video ve İndirme -->
+        <div class="card">
+            <h3 style="margin-top:0; color: #38bdf8;">Son Proje</h3>
+            <video controls>
+                <source src="SENIN_DRIVE_DIRECT_LINKIN.mp4" type="video/mp4">
+                Tarayıcınız videoyu desteklemiyor.
+            </video>
+            <br><br>
+            <a href="SENIN_DOSYA_LINKIN.zip" class="btn" style="background: #10b981; text-align: center; text-decoration: none; display: inline-block;" download>Dosyayı İndir (ZIP)</a>
+        </div>
+
+        <!-- Form Alanı -->
+        <div class="card">
+            <h3 style="margin-top:0; color: #38bdf8;">Bana Mod / Proje Gönder</h3>
+            <form action="https://formsubmit.co/mavivarlik1@gmail.com" method="POST">
+                <input type="hidden" name="_subject" value="Arkadaşlardan Yeni Proje Geldi!">
+                <input type="hidden" name="_captcha" value="false">
+                
+                <input type="text" name="Gönderen" placeholder="Senin Adın" required>
+                <input type="text" name="Proje Adı" placeholder="Mod / Proje Adı" required>
+                <input type="text" name="Link" placeholder="Drive İndirme Linki" required>
+                <textarea name="Açıklama" placeholder="Kısaca ne işe yaradığını anlat..." required></textarea>
+                
+                <button type="submit" class="btn">Mavi Varlık'a Gönder</button>
+            </form>
+        </div>
+
+        <!-- Disqus Yorumları -->
+        <div class="card">
+            <h3 style="margin-top:0; color: #38bdf8;">Yorumlar</h3>
+            <div id="disqus_thread"></div>
+        </div>
+    </div>
+
+    <script>
+        // Şifreleme Fonksiyonu (SHA-256)
+        async function sha256(text) {
+            const msgBuffer = new TextEncoder().encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // KRİPTOLU KULLANICI VE ŞİFRE ÖZETLERİ
+        // Dışarıdan bakan birisi sadece bu karmaşık kodları görecek!
+        // Format: "kullaniciadi:sifre" metninin SHA-256 özeti
+        const onayliHashler = [
+            "4f063be80076a0860098f98ec8112349e5d6148677c77f093a1cf55756bc3782", // admin:1234'ün şifreli hali
+            "bc82e3cb98e665ba5c3db7ff1f6522c07bb62854979e2730da42f06b6b66b2a0"  // mavivarlik:patron123'ün şifreli hali
+        ];
+
+        async function girisYap() {
+            const user = document.getElementById("username").value.toLowerCase().trim();
+            const pass = document.getElementById("password").value.trim();
+            const hata = document.getElementById("hataMesaji");
+
+            // Girilen bilgileri birleştirip şifreliyoruz
+            const kontrolMetni = user + ":" + pass;
+            const girilenHash = await sha256(kontrolMetni);
+
+            if (onayliHashler.includes(girilenHash)) {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("mainSite").style.display = "block";
+                sessionStorage.setItem("girisYapildi", "evet");
+            } else {
+                hata.style.display = "block";
+            }
+        }
+
+        function cikisYap() {
+            sessionStorage.removeItem("girisYapildi");
+            location.reload();
+        }
+
+        window.onload = function() {
+            if (sessionStorage.getItem("girisYapildi") === "evet") {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("mainSite").style.display = "block";
+            }
+        };
+
+        // DISQUS ENTEGRASYONU (mavivarlk adına bağlandı)
+        var disqus_config = function () {
+            this.page.url = window.location.href;  
+            this.page.identifier = "mavi_portal_secure"; 
+        };
+        (function() { 
+            var d = document, s = d.createElement('script');
+            s.src = 'https://mavivarlk.disqus.com/embed.js'; 
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
+</body>
+</html>
