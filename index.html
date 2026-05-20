@@ -128,7 +128,6 @@
         }
 
         // KRİPTOLU KULLANICI VE ŞİFRE ÖZETLERİ
-        // Dışarıdan bakan birisi sadece bu karmaşık kodları görecek!
         // Format: "kullaniciadi:sifre" metninin SHA-256 özeti
         const onayliHashler = [
             "4f063be80076a0860098f98ec8112349e5d6148677c77f093a1cf55756bc3782", // admin:1234'ün şifreli hali
@@ -165,7 +164,7 @@
             }
         };
 
-        // DISQUS ENTEGRASYONU (mavivarlk adına bağlandı)
+        // DISQUS ENTEGRASYONU
         var disqus_config = function () {
             this.page.url = window.location.href;  
             this.page.identifier = "mavi_portal_secure"; 
